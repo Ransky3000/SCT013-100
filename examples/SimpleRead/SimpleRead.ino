@@ -15,6 +15,9 @@ void setup() {
   
   // Initialize w/ Calibration: 2000 turns, 18 ohm burden
   sensor.begin(2000, 18);
+  
+  // Optional: Set Frequency (default 50Hz)
+  // sensor.setFrequency(60); 
 
   Serial.println("SCT013 Current Sensor Ready");
   
@@ -28,9 +31,9 @@ void setup() {
 }
 
 void loop() {
-  // Read RMS Current (take 1000 samples)
-  // More samples = smoother reading but slower loop
-  double amps = sensor.readAmps(1000);
+  // Read RMS Current (Time-based: 10 wavelengths)
+  // No need to guess sample count anymore!
+  double amps = sensor.readAmps();
 
   Serial.print("Current: ");
   Serial.print(amps);

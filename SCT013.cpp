@@ -34,13 +34,51 @@ SCT013::SCT013(int pin) {
     
     _sumI = 0;
     _sampleCount = 0;
-    _samplesToAverage = 1000;
+    _startTime = 0;
     _lastAmps = 0.0;
+    _frequency = 50; // Default to 50Hz
 }
 
 void SCT013::begin(float turnsRatio, float burdenResistor) {
     pinMode(_pin, INPUT);
     setCalibration(turnsRatio, burdenResistor);
+}
+
+void SCT013::setFrequency(int hz) {
+    _frequency = hz;
+}
+
+double SCT013::readAmps() {
+    // Time-based sampling: Sample for 10 cycles
+    // 50Hz: 20ms * 10 = 200ms
+    // 60Hz: 16.6ms * 10 = 166ms
+    int period_ms = 1000 / _frequency;
+    unsigned long duration = period_ms * 10; 
+    unsigned long start = millis();
+    
+    double sumI = 0;
+    int count = 0;
+
+    while (millis() - start < duration) {
+        int sampleI = analogRead(_pin);
+
+        // Digital Low Pass Filter
+        _offsetI = (_offsetI + (sampleI - _offsetI) / 1024);
+        _filteredI = sampleI - _offsetI;
+
+        // Square & Accumulate
+        sumI += (_filteredI * _filteredI);
+        count++;
+    }
+
+    if (count == 0) return 0;
+
+    // RMS & Scaling
+    double I_RMS_ADC = sqrt(sumI / count);
+    double max_adc = (double)(1 << _adcResolution);
+    double I_RMS_Volts = (I_RMS_ADC / max_adc) * _voltageReference;
+
+    return I_RMS_Volts * _calibration;
 }
 
 void SCT013::setCalibration(float turnsRatio, float burdenResistor) {
@@ -86,6 +124,9 @@ float SCT013::getDCoffset() {
 }
 
 bool SCT013::update() {
+    // Start timing on first sample
+    if (_sampleCount == 0) _startTime = millis();
+
     int sampleI = analogRead(_pin);
 
     // Digital Low Pass Filter
@@ -97,7 +138,11 @@ bool SCT013::update() {
     _sumI += sqI;
     _sampleCount++;
 
-    if (_sampleCount >= _samplesToAverage) {
+    // Calculate duration for 10 periods
+    int period_ms = 1000 / _frequency;
+    unsigned long duration = period_ms * 10;
+
+    if (millis() - _startTime >= duration) {
         // Calculate RMS
         double I_RMS_ADC = sqrt(_sumI / _sampleCount);
 

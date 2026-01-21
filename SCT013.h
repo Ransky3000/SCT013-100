@@ -44,8 +44,21 @@ public:
     void setCalibration(float turnsRatio, float burdenResistor);
 
     /**
+     * @brief Configure the line frequency (50Hz or 60Hz) for RMS timing.
+     * @param hz Frequency in Hertz (default 50).
+     */
+    void setFrequency(int hz);
+
+    /**
      * @brief Read the RMS current.
-     * @param samples Number of samples to take for the RMS calculation.
+     * Use setFrequency() to adjust timing (samples for 10 line cycles).
+     * @return RMS Current in Amperes.
+     */
+    double readAmps();
+
+    /**
+     * @brief Read the RMS current (Manual Mode).
+     * @param samples Number of samples to take.
      * @return RMS Current in Amperes.
      */
     double readAmps(int samples);
@@ -74,6 +87,7 @@ private:
     float _voltageReference;
     int _adcResolution;
     double _calibration;
+    int _frequency;
     
     // Internal variables for Digital Low Pass Filter
     double _offsetI;
@@ -82,7 +96,7 @@ private:
     // Non-blocking state
     double _sumI;
     int _sampleCount;
-    int _samplesToAverage;
+    unsigned long _startTime;
     double _lastAmps;
 };
 
