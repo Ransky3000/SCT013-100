@@ -1,32 +1,25 @@
 #include <SCT013.h>
 
 // --- HARDWARE CONFIGURATION ---
-// ESP32: 3.3V, 12-bit ADC (0-4095), Pin 34 (example)
-// Arduino: 5.0V, 10-bit ADC (0-1023), Pin A0
+// ESP32 or Arduino Uno/Mega? 
+// The library now auto-detects this! Just pass the pin.
 
 #if defined(ESP32)
   #define ADC_PIN 34
-  #define V_REF 3.3
-  #define ADC_RES 12
 #else 
-  // Arduino Uno/Mega
   #define ADC_PIN A0
-  #define V_REF 5.0
-  #define ADC_RES 10
 #endif
 
-// Burden Resistor (Ohms)
-// USE 18 OHMS for ESP32/Arduino compatibility!
-#define BURDEN_RESISTOR 18.0 
-#define CT_TURNS 2000.0
-
-SCT013 sensor(ADC_PIN, V_REF, ADC_RES);
+// Initialize Scanner (Auto-detects Volts & Resolution)
+SCT013 sensor(ADC_PIN);
 
 void setup() {
   Serial.begin(115200);
   
-  sensor.begin();
-  sensor.setCalibration(CT_TURNS, BURDEN_RESISTOR);
+  // Initialize with Calibration (Turns, Burden Ohms)
+  // Default SCT013 turns = 2000
+  // Recommended Burden = 18 Ohms
+  sensor.begin(2000, 18);
 
   Serial.println("SCT013 Non-Blocking Example");
 }

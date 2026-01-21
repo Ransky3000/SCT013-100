@@ -11,12 +11,29 @@ public:
      * @param voltageReference System logic voltage (e.g., 5.0 for Arduino Uno, 3.3 for ESP32).
      * @param adcResolution ADC bit resolution (e.g., 10 for Arduino, 12 for ESP32).
      */
+    /**
+     * @brief Constructor (Manual Configuration)
+     * @param pin The analog input pin.
+     * @param voltageReference System logic voltage (e.g., 5.0 or 3.3).
+     * @param adcResolution ADC bit resolution (e.g., 10 or 12).
+     */
     SCT013(int pin, float voltageReference, int adcResolution);
 
     /**
-     * @brief Initialize the pin mode.
+     * @brief Constructor (Auto Configuration)
+     * Automatically detects if running on ESP32 or AVR (Arduino) and sets defaults.
+     * ESP32: 3.3V, 12-bit
+     * AVR: 5.0V, 10-bit
+     * @param pin The analog input pin.
      */
-    void begin();
+    SCT013(int pin);
+
+    /**
+     * @brief Initialize the library and set calibration.
+     * @param turnsRatio Number of turns (default 2000 for standard SCT013).
+     * @param burdenResistor Burden resistor value in Ohms (default 18.0).
+     */
+    void begin(float turnsRatio = 2000.0, float burdenResistor = 18.0);
 
     /**
      * @brief Set calibration parameters manually.

@@ -12,10 +12,35 @@ SCT013::SCT013(int pin, float voltageReference, int adcResolution) {
     _sampleCount = 0;
     _samplesToAverage = 1000; // Default sample size
     _lastAmps = 0.0;
+    _lastAmps = 0.0;
 }
 
-void SCT013::begin() {
+// Auto-Config Constructor
+SCT013::SCT013(int pin) {
+    _pin = pin;
+
+    #if defined(ESP32)
+        _voltageReference = 3.3;
+        _adcResolution = 12;
+    #else
+        // Assume AVR / Standard Arduino (Uno, Mega, Nano)
+        _voltageReference = 5.0;
+        _adcResolution = 10;
+    #endif
+
+    // Same initialization
+    _calibration = 1.0; 
+    _offsetI = (1 << _adcResolution) >> 1;
+    
+    _sumI = 0;
+    _sampleCount = 0;
+    _samplesToAverage = 1000;
+    _lastAmps = 0.0;
+}
+
+void SCT013::begin(float turnsRatio, float burdenResistor) {
     pinMode(_pin, INPUT);
+    setCalibration(turnsRatio, burdenResistor);
 }
 
 void SCT013::setCalibration(float turnsRatio, float burdenResistor) {
