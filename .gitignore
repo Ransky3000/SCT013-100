@@ -39,3 +39,7 @@
 
 # debug information files
 *.dwo
+
+
+ACS712-driver/
+EmonLib/
