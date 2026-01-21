@@ -10,8 +10,7 @@ SCT013::SCT013(int pin, float voltageReference, int adcResolution) {
     // Non-blocking init
     _sumI = 0;
     _sampleCount = 0;
-    _samplesToAverage = 1000; // Default sample size
-    _lastAmps = 0.0;
+    _startTime = 0;
     _lastAmps = 0.0;
 }
 

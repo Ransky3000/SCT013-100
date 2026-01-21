@@ -20,6 +20,9 @@ void setup() {
   // Default SCT013 turns = 2000
   // Recommended Burden = 18 Ohms
   sensor.begin(2000, 18);
+  
+  // Set Frequency (Default 50Hz, change to 60Hz if needed)
+  sensor.setFrequency(60);
 
   Serial.println("SCT013 Non-Blocking Example");
 }
