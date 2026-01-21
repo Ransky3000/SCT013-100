@@ -19,7 +19,7 @@ void setup() {
   // Initialize with Calibration (Turns, Burden Ohms)
   // Default SCT013 turns = 2000
   // Recommended Burden = 18 Ohms
-  sensor.begin(2000, 18);
+  sensor.begin(2000, 34);
   
   // Set Frequency (Default 50Hz, change to 60Hz if needed)
   sensor.setFrequency(60);
@@ -39,10 +39,13 @@ void loop() {
       lastPrintTime = millis();
       
       double amps = sensor.getLastAmps();
+
+      if(amps < 0.080){amps = 0;};
       
       Serial.print("Current: ");
-      Serial.print(amps);
+      Serial.print(amps,3);
       Serial.println(" A");
+
     }
   }
 
