@@ -50,6 +50,7 @@ void setup() {
   Serial.println("=== SCT013 Calibration Utility ===");
   Serial.println("COMMANDS:");
   Serial.println("  't' -> Tare (Zero the sensor)");
+  Serial.println("  'r' -> Resistor (Set burden resistor & Reset)");
   Serial.println("  'c' -> Calibrate (Enter known Amps)");
   Serial.println("==================================");
   delay(2000);
