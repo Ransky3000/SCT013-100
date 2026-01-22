@@ -58,13 +58,19 @@ void setup() {
 
 void loop() {
   // 1. Read Current (Time-based: 10 wavelengths)
-  // This is much more stable than readAmps(500) because it doesn't cut off waves halfway.
-  double measuredAmps = sensor.readAmps(); 
+  double rawAmps = sensor.readAmps(); 
   double currentFactor = sensor.getCalibrationFactor();
+
+  // --- SMOOTHING FILTER ---
+  // A simple "Running Average" to make the numbers steady like a multimeter.
+  // Formula: Val = (Old * 0.9) + (New * 0.1)
+  static double smoothedAmps = -1.0;
+  if (smoothedAmps < 0) smoothedAmps = rawAmps; // First run init
+  else smoothedAmps = (smoothedAmps * 0.9) + (rawAmps * 0.1);
 
   // 2. Print status
   Serial.print("Measured: ");
-  Serial.print(measuredAmps, 3);
+  Serial.print(smoothedAmps, 3);
   Serial.print(" A  |  Current Factor: ");
   Serial.println(currentFactor, 4);
 
