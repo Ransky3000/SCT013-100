@@ -18,7 +18,7 @@
 
 // Initialize sensor (using default pins for ESP32/Arduino auto-detect)
 // Adjust pin/voltage/resolution if needed: SCT013 sensor(A0, 5.0, 1024);
-SCT013 sensor(34); // ESP32 Example (Pin 34)
+SCT013 sensor(A0); // ESP32 Example (Pin 34)
 
 // EEPROM Address for calibration factor
 const int EEPROM_ADDR = 0;
@@ -28,7 +28,7 @@ void setup() {
   while (!Serial); // Wait for serial
 
   // Default calibration (Ratio 2000 / Burden 18 = 111.1)
-  sensor.begin(2000, 62); 
+  sensor.begin(2000, 33); 
 
   // --- Load from EEPROM ---
   #if defined(ESP32) || defined(ESP8266)
