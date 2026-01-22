@@ -69,36 +69,47 @@ void loop() {
 
   // 3. User Input (Non-blocking check)
   if (Serial.available()) {
-    float realAmps = Serial.parseFloat();
-    
-    // Clear buffer
-    while(Serial.available()) Serial.read();
+    char c = Serial.peek(); // Check first character without consuming
 
-    if (realAmps > 0.0) {
-      // THE MAGIC FORMULA:
-      // NewFactor = OldFactor * (Real / Measured)
-      
-      double newFactor = currentFactor * (realAmps / measuredAmps);
-      
-      Serial.println("\n------------------------------------------------");
-      Serial.print(">>> REAL Amps: "); Serial.println(realAmps, 3);
-      Serial.print(">>> MEASURED : "); Serial.println(measuredAmps, 3);
-      Serial.print(">>> NEW FACTOR: "); Serial.println(newFactor, 5);
-      Serial.println("------------------------------------------------");
-      Serial.println("Saving to EEPROM...");
-      
-      // Save to EEPROM
-      EEPROM.put(EEPROM_ADDR, newFactor);
-      #if defined(ESP32) || defined(ESP8266)
-        EEPROM.commit();
-      #endif
-      
-      Serial.println("Saved! You can now restart the board and it will remember.");
-      Serial.println("------------------------------------------------\n");
-      
-      // Apply it immediately to test
-      sensor.setCalibrationFactor(newFactor);
-      delay(2000); // Pause to let user read
+    if (c == 't') {
+        Serial.read(); // Consume 't'
+        sensor.tareNoDelay();
+        Serial.println("\n>>> Taring started... (Fast converging to 0) <<<");
+        // Clear anything else in buffer
+        while(Serial.available()) Serial.read();
+    } 
+    else {
+        float realAmps = Serial.parseFloat();
+        
+        // Clear buffer
+        while(Serial.available()) Serial.read();
+
+        if (realAmps > 0.0) {
+          // THE MAGIC FORMULA:
+          // NewFactor = OldFactor * (Real / Measured)
+          
+          double newFactor = currentFactor * (realAmps / measuredAmps);
+          
+          Serial.println("\n------------------------------------------------");
+          Serial.print(">>> REAL Amps: "); Serial.println(realAmps, 3);
+          Serial.print(">>> MEASURED : "); Serial.println(measuredAmps, 3);
+          Serial.print(">>> NEW FACTOR: "); Serial.println(newFactor, 5);
+          Serial.println("------------------------------------------------");
+          Serial.println("Saving to EEPROM...");
+          
+          // Save to EEPROM
+          EEPROM.put(EEPROM_ADDR, newFactor);
+          #if defined(ESP32) || defined(ESP8266)
+            EEPROM.commit();
+          #endif
+          
+          Serial.println("Saved! You can now restart the board and it will remember.");
+          Serial.println("------------------------------------------------\n");
+          
+          // Apply it immediately to test
+          sensor.setCalibrationFactor(newFactor);
+          delay(2000); // Pause to let user read
+        }
     }
   }
 
