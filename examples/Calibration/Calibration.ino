@@ -63,10 +63,10 @@ void loop() {
 
   // --- SMOOTHING FILTER ---
   // A simple "Running Average" to make the numbers steady like a multimeter.
-  // Formula: Val = (Old * 0.9) + (New * 0.1)
+  // Formula: Val = (Old * 0.7) + (New * 0.3) -> Increased responsiveness
   static double smoothedAmps = -1.0;
   if (smoothedAmps < 0) smoothedAmps = rawAmps; // First run init
-  else smoothedAmps = (smoothedAmps * 0.9) + (rawAmps * 0.1);
+  else smoothedAmps = (smoothedAmps * 0.7) + (rawAmps * 0.3);
 
   // 2. Print status
   Serial.print("Measured: ");
