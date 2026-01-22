@@ -63,10 +63,10 @@ void loop() {
 
   // --- SMOOTHING FILTER ---
   // A simple "Running Average" to make the numbers steady like a multimeter.
-  // Formula: Val = (Old * 0.7) + (New * 0.3) -> Increased responsiveness
+  // Formula: Val = (Old * 0.2) + (New * 0.8) -> Increased responsiveness (Fast)
   static double smoothedAmps = -1.0;
   if (smoothedAmps < 0) smoothedAmps = rawAmps; // First run init
-  else smoothedAmps = (smoothedAmps * 0.2) + (rawAmps * 0.8);
+  else smoothedAmps = sensor.smooth(rawAmps, smoothedAmps, 0.2); // 20% Old, 80% New
 
   // 2. Print status
   Serial.print("Measured: ");
