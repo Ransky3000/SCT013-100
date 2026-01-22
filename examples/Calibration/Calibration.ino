@@ -80,15 +80,19 @@ void loop() {
     
     // --- CASE C: CALIBRATE ---
     else if (cmd == 'c') {
+        // Clear buffer immediately (remove leftover \n or \r from the 'c' command)
+        while(Serial.available()) Serial.read();
+
         Serial.println("\n--- CALIBRATION MODE ---");
         Serial.println("Enter the REAL Amps shown on your multimeter:");
         
         // Wait for user input (Blocking is fine for a cal sketch)
+        // Wait until at least 1 byte is available
         while (Serial.available() == 0) { delay(10); }
 
         float realAmps = Serial.parseFloat();
         
-        // Clear buffer
+        // Clear buffer again (remove \n from the number)
         while(Serial.available()) Serial.read();
 
         if (realAmps > 0.0) {
