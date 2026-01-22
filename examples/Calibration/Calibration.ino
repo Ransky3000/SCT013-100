@@ -48,10 +48,9 @@ void setup() {
   }
 
   Serial.println("=== SCT013 Calibration Utility ===");
-  Serial.println("1. Connect a KNOWN load (e.g., a lamp).");
-  Serial.println("2. Measure current with a multimeter.");
-  Serial.println("3. Type the REAL Amps into this Serial Monitor.");
-  Serial.println("   (The new factor will be saved to EEPROM automatically)");
+  Serial.println("COMMANDS:");
+  Serial.println("  't' -> Tare (Zero the sensor)");
+  Serial.println("  'c' -> Calibrate (Enter known Amps)");
   Serial.println("==================================");
   delay(2000);
 }
@@ -69,28 +68,33 @@ void loop() {
 
   // 3. User Input (Non-blocking check)
   if (Serial.available()) {
-    char c = Serial.peek(); // Check first character without consuming
+    char cmd = Serial.read(); 
 
-    if (c == 't') {
-        Serial.read(); // Consume 't'
+    // --- CASE T: TARE ---
+    if (cmd == 't') {
         sensor.tareNoDelay();
         Serial.println("\n>>> Taring started... (Fast converging to 0) <<<");
         // Clear anything else in buffer
         while(Serial.available()) Serial.read();
     } 
-    else {
+    
+    // --- CASE C: CALIBRATE ---
+    else if (cmd == 'c') {
+        Serial.println("\n--- CALIBRATION MODE ---");
+        Serial.println("Enter the REAL Amps shown on your multimeter:");
+        
+        // Wait for user input (Blocking is fine for a cal sketch)
+        while (Serial.available() == 0) { delay(10); }
+
         float realAmps = Serial.parseFloat();
         
         // Clear buffer
         while(Serial.available()) Serial.read();
 
         if (realAmps > 0.0) {
-          // THE MAGIC FORMULA:
-          // NewFactor = OldFactor * (Real / Measured)
-          
           double newFactor = currentFactor * (realAmps / measuredAmps);
           
-          Serial.println("\n------------------------------------------------");
+          Serial.println("------------------------------------------------");
           Serial.print(">>> REAL Amps: "); Serial.println(realAmps, 3);
           Serial.print(">>> MEASURED : "); Serial.println(measuredAmps, 3);
           Serial.print(">>> NEW FACTOR: "); Serial.println(newFactor, 5);
@@ -103,12 +107,13 @@ void loop() {
             EEPROM.commit();
           #endif
           
-          Serial.println("Saved! You can now restart the board and it will remember.");
+          Serial.println("Saved! Restarting with new factor...");
           Serial.println("------------------------------------------------\n");
           
           // Apply it immediately to test
           sensor.setCalibrationFactor(newFactor);
-          delay(2000); // Pause to let user read
+        } else {
+            Serial.println("Invalid value. Cancellation.");
         }
     }
   }
