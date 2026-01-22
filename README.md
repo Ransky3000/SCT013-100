@@ -6,10 +6,11 @@ Designed to be **simple** for beginners yet **powerful** for advanced IoT applic
 
 ## Features
 *   **Auto-Configuration**: Automatically detects if you are compiling for **Arduino (5V, 10-bit)** or **ESP32 (3.3V, 12-bit)** and adjusts math accordingly.
-*   **Digital Low Pass Filter**: Uses a smart digital filter (ported from EmonLib) to remove DC offset dynamically. This handles temperature drift and hardware bias fluctuations.
 *   **Precision Timing**: Samples for exactly **10 line cycles** (e.g., 200ms @ 50Hz) to ensure stable RMS readings regardless of loop speed.
-*   **Non-Blocking Mode**: Includes an `update()` method so you can read current *without* stopping your main loop (perfect for multitasking/WiFi).
-*   **Adjustable Frequency**: easy support for both **50Hz** and **60Hz** mains.
+*   **Digital Smoothing**: Built-in helper to stabilize jittery readings (`smooth()` method).
+*   **Zero/Tare**: Non-blocking `tareNoDelay()` function to remove DC offset on the fly.
+*   **Calibration Utility**: Includes a sketch to fine-tune your sensor against a multimeter using Serial commands.
+*   **Non-Blocking Mode**: Includes an `update()` method so you can read current *without* stopping your main loop.
 
 ## Installation
 1.  Download this repository as a `.zip` file.
@@ -38,9 +39,6 @@ void setup() {
   
   // Calibration: 2000 turns, 18 ohm burden resistor
   sensor.begin(2000, 18);
-  
-  // Optional: Set Frequency (Default 50Hz)
-  // sensor.setFrequency(60); 
 }
 
 void loop() {
@@ -74,14 +72,20 @@ void loop() {
   if (sensor.update()) {
     double amps = sensor.getLastAmps();
     
-    // Hard-limit noise floor if desired
-    if (amps < 0.08) amps = 0;
-    
     Serial.print("Current: ");
     Serial.println(amps);
   }
 }
 ```
+
+## Calibration Utility
+This library comes with a powerful **Calibration Sketch** (`examples/Calibration/Calibration.ino`). Upload it to your board to fine-tune your readings via Serial Monitor.
+
+**Supported Commands:**
+*   **`t` (Tare)**: Zeros the sensor (removes DC offset).
+*   **`c` (Calibrate)**: Enter the *Real Amps* from your multimeter, and the storage automatically calculates the new factor.
+*   **`r` (Reset)**: Enter your burden resistor value (e.g., 18 or 33) to reset calibration to theoretical defaults.
+*   **`s` (Smooth)**: Adjust the smoothing filter weight (0.1 = Fast, 0.9 = Slow/Stable).
 
 ## API Reference
 
@@ -89,8 +93,8 @@ void loop() {
 Constructor. Automatically detects board voltage and ADC resolution.
 
 ### `void begin(turns, burdenOhms)`
-Initializes the sensor.
-*   `turns`: The number of turns in the CT (e.g., **2000** for SCT013-100).
+Initializes the sensor parameters.
+*   `turns`: The number of turns using in the CT (e.g., **2000**).
 *   `burdenOhms`: The value of your burden resistor (e.g., **18** or **33**).
 
 ### `void setFrequency(hz)`
@@ -98,10 +102,22 @@ Sets the mains frequency for timing calculations.
 *   `hz`: **50** or **60**. (Default: 50).
 
 ### `double readAmps()`
-Blocking method. Samples for 10 full cycles and returns the RMS Amps.
+**Blocking**. Samples for 10 full cycles and returns the RMS Amps. Recommended for highest accuracy if blocking is okay.
 
 ### `bool update()`
-Non-blocking method. Call this in `loop()`. Returns `true` when a new reading is available.
+**Non-blocking**. Call this in `loop()`. Returns `true` when a new reading is available.
 
 ### `double getLastAmps()`
 Returns the most recent current reading calculated by `update()`.
+
+### `void tareNoDelay()`
+Initiates a fast-convergence filter to re-center the DC offset (Zero point). Call this if your readings drift when no load is connected.
+
+### `double smooth(newVal, oldVal, weight)`
+Helper function for Exponential Moving Average (EMA) smoothing.
+*   `newVal`: The latest reading.
+*   `oldVal`: The previous smoothed value.
+*   `weight`: The "heaviness" of the old value (0.0 - 1.0).
+    *   **0.9**: Very smooth, slow response.
+    *   **0.2**: Fast response, less smoothing.
+
