@@ -22,6 +22,8 @@ SCT013 sensor(34); // ESP32 Example (Pin 34)
 
 // EEPROM Address for calibration factor
 const int EEPROM_ADDR = 0;
+// Default smoothing (0.2 = fast/responsive)
+double smoothingWeight = 0.2;
 
 void setup() {
   Serial.begin(115200);
@@ -51,6 +53,7 @@ void setup() {
   Serial.println("COMMANDS:");
   Serial.println("  't' -> Tare (Zero the sensor)");
   Serial.println("  'r' -> Resistor (Set burden resistor & Reset)");
+  Serial.println("  's' -> Smoothness (Set smoothing weight 0.0-1.0)");
   Serial.println("  'c' -> Calibrate (Enter known Amps)");
   Serial.println("==================================");
   delay(2000);
@@ -63,16 +66,18 @@ void loop() {
 
   // --- SMOOTHING FILTER ---
   // A simple "Running Average" to make the numbers steady like a multimeter.
-  // Formula: Val = (Old * 0.2) + (New * 0.8) -> Increased responsiveness (Fast)
+  // Formula: Val = (Old * Weight) + (New * (1-Weight))
   static double smoothedAmps = -1.0;
   if (smoothedAmps < 0) smoothedAmps = rawAmps; // First run init
-  else smoothedAmps = sensor.smooth(rawAmps, smoothedAmps, 0.2); // 20% Old, 80% New
+  else smoothedAmps = sensor.smooth(rawAmps, smoothedAmps, smoothingWeight);
 
   // 2. Print status
   Serial.print("Measured: ");
   Serial.print(smoothedAmps, 3);
   Serial.print(" A  |  Current Factor: ");
-  Serial.println(currentFactor, 4);
+  Serial.print(currentFactor, 4);
+  Serial.print(" | Smooth: ");
+  Serial.println(smoothingWeight, 2);
 
   // 3. User Input (Non-blocking check)
   if (Serial.available()) {
@@ -166,6 +171,30 @@ void loop() {
             sensor.setCalibrationFactor(newFactor);
         } else {
             Serial.println("Invalid resistor value.");
+        }
+    }
+
+    // --- CASE S: SMOOTHING ---
+    else if (cmd == 's') {
+        // Clear buffer
+        while(Serial.available()) Serial.read();
+
+        Serial.println("\n--- SET SMOOTHING ---");
+        Serial.println("Enter new Weight (0.1 = Fast, 0.9 = Slow/Smooth):");
+        Serial.print("Current: "); Serial.println(smoothingWeight);
+        
+        while (Serial.available() == 0) { delay(10); }
+
+        float w = Serial.parseFloat();
+        while(Serial.available()) Serial.read();
+
+        if (w >= 0.0 && w <= 0.99) {
+            smoothingWeight = w;
+            Serial.print(">>> Smoothing Weight set to: ");
+            Serial.println(smoothingWeight);
+            Serial.println("(Note: This resets on reboot)");
+        } else {
+            Serial.println("Invalid value. Use 0.0 - 0.99");
         }
     }
   }
