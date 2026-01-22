@@ -164,3 +164,11 @@ bool SCT013::update() {
 double SCT013::getLastAmps() {
     return _lastAmps;
 }
+
+double SCT013::getCalibrationFactor() {
+  return _calibration;
+}
+
+void SCT013::setCalibrationFactor(double factor) {
+  _calibration = factor;
+}

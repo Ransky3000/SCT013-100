@@ -48,6 +48,10 @@ public:
      * @param hz Frequency in Hertz (default 50).
      */
     void setFrequency(int hz);
+    
+    // Calibration Helpers
+    double getCalibrationFactor(); 
+    void setCalibrationFactor(double factor);
 
     /**
      * @brief Read the RMS current.
