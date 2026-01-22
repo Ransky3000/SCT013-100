@@ -121,6 +121,42 @@ void loop() {
             Serial.println("Invalid value. Cancellation.");
         }
     }
+    
+    // --- CASE R: RESET / RESISTOR ---
+    else if (cmd == 'r') {
+        // Clear buffer
+        while(Serial.available()) Serial.read();
+
+        Serial.println("\n--- RESET CALIBRATION ---");
+        Serial.println("Enter the Burden Resistor value (Ohms) used in your circuit:");
+        Serial.println("(Default: 18 for Arduino modules, 62 or 33 custom)");
+        
+        while (Serial.available() == 0) { delay(10); }
+
+        float resistor = Serial.parseFloat();
+        while(Serial.available()) Serial.read();
+
+        if (resistor > 0.0) {
+            // Recalculate based on theoretical ratio (2000 turns)
+            double newFactor = 2000.0 / resistor;
+            
+            Serial.println("------------------------------------------------");
+            Serial.print(">>> Resistor: "); Serial.print(resistor); Serial.println(" Ohms");
+            Serial.print(">>> New Theoretical Factor: "); Serial.println(newFactor, 5);
+            Serial.println("------------------------------------------------");
+            Serial.println("Saving to EEPROM...");
+
+            EEPROM.put(EEPROM_ADDR, newFactor);
+            #if defined(ESP32) || defined(ESP8266)
+              EEPROM.commit();
+            #endif
+            
+            Serial.println("Saved! Restarting with new resistor value...");
+            sensor.setCalibrationFactor(newFactor);
+        } else {
+            Serial.println("Invalid resistor value.");
+        }
+    }
   }
 
   delay(500);
