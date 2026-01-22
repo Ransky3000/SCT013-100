@@ -57,6 +57,9 @@ public:
     void tareNoDelay();
     bool getTareStatus();
 
+    // Utility
+    double smooth(double newVal, double oldVal, double weight);
+
     /**
      * @brief Read the RMS current.
      * Use setFrequency() to adjust timing (samples for 10 line cycles).

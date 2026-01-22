@@ -18,7 +18,7 @@
 
 // Initialize sensor (using default pins for ESP32/Arduino auto-detect)
 // Adjust pin/voltage/resolution if needed: SCT013 sensor(A0, 5.0, 1024);
-SCT013 sensor(A0); // ESP32 Example (Pin 34)
+SCT013 sensor(34); // ESP32 Example (Pin 34)
 
 // EEPROM Address for calibration factor
 const int EEPROM_ADDR = 0;
@@ -66,7 +66,7 @@ void loop() {
   // Formula: Val = (Old * 0.7) + (New * 0.3) -> Increased responsiveness
   static double smoothedAmps = -1.0;
   if (smoothedAmps < 0) smoothedAmps = rawAmps; // First run init
-  else smoothedAmps = (smoothedAmps * 0.7) + (rawAmps * 0.3);
+  else smoothedAmps = (smoothedAmps * 0.2) + (rawAmps * 0.8);
 
   // 2. Print status
   Serial.print("Measured: ");

@@ -192,3 +192,10 @@ bool SCT013::getTareStatus() {
   // Returns true if Taring is COMPLETE (active low logic typically expected by users)
   return (_tareCount == 0);
 }
+
+double SCT013::smooth(double newVal, double oldVal, double weight) {
+    // weight is the "strength" of the OLD value (0.0 - 1.0)
+    // 0.9 = heavy smoothing (slow)
+    // 0.1 = light smoothing (fast)
+    return (oldVal * weight) + (newVal * (1.0 - weight));
+}
