@@ -14,23 +14,44 @@
 */
 
 #include <SCT013.h>
+#include <EEPROM.h> // Include EEPROM library
 
 // Initialize sensor (using default pins for ESP32/Arduino auto-detect)
 // Adjust pin/voltage/resolution if needed: SCT013 sensor(A0, 5.0, 1024);
 SCT013 sensor(34); // ESP32 Example (Pin 34)
+
+// EEPROM Address for calibration factor
+const int EEPROM_ADDR = 0;
 
 void setup() {
   Serial.begin(115200);
   while (!Serial); // Wait for serial
 
   // Default calibration (Ratio 2000 / Burden 18 = 111.1)
-  // Or Burden 62 = 32.25
   sensor.begin(2000, 62); 
+
+  // --- Load from EEPROM ---
+  #if defined(ESP32) || defined(ESP8266)
+    EEPROM.begin(512); // Initialize EEPROM for ESP
+  #endif
+
+  double savedFactor;
+  EEPROM.get(EEPROM_ADDR, savedFactor);
+
+  // Simple sanity check: if the value is reasonable (e.g., not NaN or 0 or -1)
+  if (!isnan(savedFactor) && savedFactor > 0.1 && savedFactor < 10000.0) {
+    sensor.setCalibrationFactor(savedFactor);
+    Serial.print("Loaded stored calibration factor: ");
+    Serial.println(savedFactor);
+  } else {
+    Serial.println("No valid calibration found in EEPROM. Using default.");
+  }
 
   Serial.println("=== SCT013 Calibration Utility ===");
   Serial.println("1. Connect a KNOWN load (e.g., a lamp).");
   Serial.println("2. Measure current with a multimeter.");
   Serial.println("3. Type the REAL Amps into this Serial Monitor.");
+  Serial.println("   (The new factor will be saved to EEPROM automatically)");
   Serial.println("==================================");
   delay(2000);
 }
@@ -64,10 +85,15 @@ void loop() {
       Serial.print(">>> MEASURED : "); Serial.println(measuredAmps, 3);
       Serial.print(">>> NEW FACTOR: "); Serial.println(newFactor, 5);
       Serial.println("------------------------------------------------");
-      Serial.println("Update your code with: ");
-      Serial.print("sensor.setCalibrationFactor(");
-      Serial.print(newFactor, 5);
-      Serial.println(");");
+      Serial.println("Saving to EEPROM...");
+      
+      // Save to EEPROM
+      EEPROM.put(EEPROM_ADDR, newFactor);
+      #if defined(ESP32) || defined(ESP8266)
+        EEPROM.commit();
+      #endif
+      
+      Serial.println("Saved! You can now restart the board and it will remember.");
       Serial.println("------------------------------------------------\n");
       
       // Apply it immediately to test
