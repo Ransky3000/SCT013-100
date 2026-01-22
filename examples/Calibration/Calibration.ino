@@ -57,8 +57,9 @@ void setup() {
 }
 
 void loop() {
-  // 1. Read Current
-  double measuredAmps = sensor.readAmps(500); // 500 samples
+  // 1. Read Current (Time-based: 10 wavelengths)
+  // This is much more stable than readAmps(500) because it doesn't cut off waves halfway.
+  double measuredAmps = sensor.readAmps(); 
   double currentFactor = sensor.getCalibrationFactor();
 
   // 2. Print status
