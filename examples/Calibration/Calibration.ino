@@ -104,11 +104,15 @@ void loop() {
         while(Serial.available()) Serial.read();
 
         if (realAmps > 0.0) {
-          double newFactor = currentFactor * (realAmps / measuredAmps);
+          // THE MAGIC FORMULA:
+          // NewFactor = OldFactor * (Real / Measured)
+          // We use 'smoothedAmps' because that's what the user sees on screen.
+          
+          double newFactor = currentFactor * (realAmps / smoothedAmps);
           
           Serial.println("------------------------------------------------");
           Serial.print(">>> REAL Amps: "); Serial.println(realAmps, 3);
-          Serial.print(">>> MEASURED : "); Serial.println(measuredAmps, 3);
+          Serial.print(">>> MEASURED : "); Serial.println(smoothedAmps, 3);
           Serial.print(">>> NEW FACTOR: "); Serial.println(newFactor, 5);
           Serial.println("------------------------------------------------");
           Serial.println("Saving to EEPROM...");
