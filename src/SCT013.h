@@ -53,6 +53,10 @@ public:
     double getCalibrationFactor(); 
     void setCalibrationFactor(double factor);
 
+    // Tare / Zeroing (Non-blocking)
+    void tareNoDelay();
+    bool getTareStatus();
+
     /**
      * @brief Read the RMS current.
      * Use setFrequency() to adjust timing (samples for 10 line cycles).
@@ -102,6 +106,9 @@ private:
     int _sampleCount;
     unsigned long _startTime;
     double _lastAmps;
+
+    // Tare
+    int _tareCount;
 };
 
 #endif

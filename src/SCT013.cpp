@@ -12,6 +12,7 @@ SCT013::SCT013(int pin, float voltageReference, int adcResolution) {
     _sampleCount = 0;
     _startTime = 0;
     _lastAmps = 0.0;
+    _tareCount = 0;
 }
 
 // Auto-Config Constructor
@@ -36,6 +37,7 @@ SCT013::SCT013(int pin) {
     _startTime = 0;
     _lastAmps = 0.0;
     _frequency = 50; // Default to 50Hz
+    _tareCount = 0;
 }
 
 void SCT013::begin(float turnsRatio, float burdenResistor) {
@@ -129,7 +131,14 @@ bool SCT013::update() {
     int sampleI = analogRead(_pin);
 
     // Digital Low Pass Filter
-    _offsetI = (_offsetI + (sampleI - _offsetI) / 1024);
+    if (_tareCount > 0) {
+        // Fast convergence for Tare
+        _offsetI = (_offsetI + (sampleI - _offsetI) / 4);
+        _tareCount--;
+    } else {
+        // Normal slow convergence
+        _offsetI = (_offsetI + (sampleI - _offsetI) / 1024);
+    }
     _filteredI = sampleI - _offsetI;
 
     // Accumulate Squares
@@ -171,4 +180,15 @@ double SCT013::getCalibrationFactor() {
 
 void SCT013::setCalibrationFactor(double factor) {
   _calibration = factor;
+}
+
+void SCT013::tareNoDelay() {
+  // Start fast convergence mode for ~100 samples
+  // This rapidly finds the new DC offset (Zero point)
+  _tareCount = 100;
+}
+
+bool SCT013::getTareStatus() {
+  // Returns true if Taring is COMPLETE (active low logic typically expected by users)
+  return (_tareCount == 0);
 }
